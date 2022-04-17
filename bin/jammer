@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+require 'optparse'
+require_relative '../lib/jammer'
+
+options = {}
+
+parsed = OptionParser.new do |parser|
+  parser.on('-s', '--search_keyword SEARCH_KEYWORD', 'Assigns a new search keyword')
+end
+
+parsed.parse!(into: options)
+puts options.inspect
+
+unless options[:search_keyword].nil?
+  cli = Jammer::CLI.new
+  cli.search(options[:search_keyword])
+end
