@@ -1,12 +1,22 @@
 module Jammer
   class CLI
-    def initialize
-      @hello = '....Started Searching.....'
+    attr_accessor :keyword
+
+    def initialize(keyword = 'TODO')
+      @keyword = keyword
     end
 
-    def search(query)
-      puts @hello
-      search_cmd = "grep -Rw $(pwd) -e #{query}"
+    def exists?
+      occurence_count.positive?
+    end
+
+    def occurence_count
+      count_cmd = "grep -Rw $(pwd) -e #{@keyword} | wc -l"
+      system(count_cmd)
+    end
+
+    def occurence_list
+      search_cmd = "grep -Rw $(pwd) -e #{@keyword}"
       system(search_cmd)
     end
   end
