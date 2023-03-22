@@ -9,8 +9,8 @@ new_jammer = Jammer::CLI.new # Default keyword will be TODO
 
 parser = OptionParser.new do |option|
   option.on('-a', '--keyword KEYWORD', 'Assigns a new search keyword') { |keyword| new_jammer.keyword = keyword }
-  option.on('-l', '--list', 'List all the occurences') { new_jammer.occurence_list }
-  option.on('-c', '--count', 'Count all the occurences') { new_jammer.occurence_count }
+  option.on('-l', '--list', 'List all the occurrences') { new_jammer.occurrence_list }
+  option.on('-c', '--count', 'Count all the occurrences') { new_jammer.occurrence_count }
   option.on('-h', '--help', 'Render all the commands') do
     puts parser
     exit
@@ -18,4 +18,4 @@ parser = OptionParser.new do |option|
 end
 
 parser.parse!(into: options)
-puts new_jammer.keyword
+puts new_jammer.exists?
