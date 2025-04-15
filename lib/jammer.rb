@@ -11,12 +11,12 @@ module Jammer
     end
 
     def occurrence_count
-      count_cmd = "grep -Rw $(pwd) -e #{@keyword} | wc -l"
-      system(count_cmd)
+      count_cmd = "grep -Rw . -e '#{@keyword}' | wc -l"
+      `#{count_cmd}`.to_i
     end
 
     def occurrence_list
-      search_cmd = "grep -Rw $(pwd) -e #{@keyword}"
+      search_cmd = "grep -Rw . -e '#{@keyword}'"
       system(search_cmd)
     end
   end
