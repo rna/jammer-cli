@@ -18,4 +18,11 @@ parser = OptionParser.new do |option|
 end
 
 parser.parse!(into: options)
-puts new_jammer.exists?
+
+if new_jammer.exists?
+  puts "Found keywords like '#{new_jammer.keyword}'. Aborting commit."
+  exit 1
+else
+  # No need to print anything on success for pre-commit
+  exit 0
+end
