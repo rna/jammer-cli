@@ -68,6 +68,37 @@ def install_git_hook
   end
 end
 
+def uninstall_git_hook
+  unless system('git rev-parse --is-inside-work-tree', out: File::NULL, err: File::NULL)
+    puts "Error: Not inside a Git repository."
+    exit 1
+  end
+
+  git_dir = `git rev-parse --git-dir`.strip
+  pre_commit_hook_path = File.join(git_dir, 'hooks', 'pre-commit')
+
+  if File.exist?(pre_commit_hook_path)
+    content = File.read(pre_commit_hook_path)
+    if content.include?("# Hook installed by jammer-cli")
+      begin
+        File.delete(pre_commit_hook_path)
+        puts "Successfully uninstalled pre-commit hook from '#{pre_commit_hook_path}'"
+        exit 0
+      rescue => e
+        puts "Error uninstalling hook: #{e.message}"
+        exit 1
+      end
+    else
+      puts "Warning: An existing pre-commit hook was found that was not installed by jammer-cli. Skipping uninstall."
+      exit 1
+    end
+  else
+    puts "No jammer-cli pre-commit hook found to uninstall."
+    exit 0
+  end
+end
+
+
 options = { install_hook: false }
 new_jammer = Jammer::CLI.new # Default keyword will be TODO
 
@@ -100,10 +131,15 @@ parser = OptionParser.new do |option|
     puts "Jammer version #{Jammer::VERSION}"
     exit
   end
-  
+
   option.on('-f', '--force', 'Force overwrite of existing git hooks') do
     options[:force] = true
   end
+
+  option.on('--uninstall-hook', 'Uninstall the pre-commit hook') do
+    options[:uninstall_hook] = true
+  end
+
 end
 
 begin
@@ -117,6 +153,12 @@ end
 
 if options[:install_hook]
   install_git_hook
+  exit 0
+end
+
+if options[:uninstall_hook]
+  uninstall_git_hook
+  exit 0
 end
 
 
