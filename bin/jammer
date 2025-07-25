@@ -27,15 +27,16 @@ def install_git_hook
     exit 1
   end
 
-  if File.exist?(pre_commit_hook_path) && !File.symlink?(pre_commit_hook_path)
-     print "Warning: '#{pre_commit_hook_path}' already exists. Overwrite? [y/N] "
-     overwrite = STDIN.gets.chomp.downcase
-     unless overwrite == 'y'
-       puts "Aborted."
-       exit 0
-     end
-     puts "Overwriting existing hook..."
+  if File.exist?(pre_commit_hook_path) && !options[:force]
+    print "Warning: '#{pre_commit_hook_path}' already exists. Overwrite? [y/N] "
+    overwrite = STDIN.gets.chomp.downcase
+    unless overwrite == 'y'
+      puts "Aborted. Use --force to overwrite."
+      exit 0
+    end
   end
+
+  puts "Installing pre-commit hook..."
 
   hook_content = <<~SCRIPT
   #!/bin/sh
@@ -98,6 +99,10 @@ parser = OptionParser.new do |option|
   option.on('-v', '--version', 'Show version') do
     puts "Jammer version #{Jammer::VERSION}"
     exit
+  end
+  
+  option.on('-f', '--force', 'Force overwrite of existing git hooks') do
+    options[:force] = true
   end
 end
 
