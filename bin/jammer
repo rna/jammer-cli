@@ -1,98 +1,11 @@
 #!/usr/bin/env ruby
-
-require 'optparse'
-require 'fileutils'
-
+# frozen_string_literal: true
 
 begin
-  require 'jammer'
-  require 'jammer/hook_manager'
+  require 'jammer/command_line_interface'
 rescue LoadError
   # Fallback for development environment when not installed
-  require_relative '../lib/jammer'
-  require_relative '../lib/jammer/hook_manager'
+  require_relative '../lib/jammer/command_line_interface'
 end
 
-
-
-
-
-options = { install_hook: false }
-new_jammer = Jammer::CLI.new # Default keyword will be TODO
-
-parser = OptionParser.new do |option|
-  option.banner = "Usage: jammer [options]"
-
-  option.separator ""
-  option.separator "Keyword checking options:"
-
-  option.on('-a', '--keyword KEYWORD', 'Assigns a new search keyword') { |keyword| new_jammer.keyword = keyword }
-  option.on('-l', '--list', 'List all occurrences of the keyword') { options[:action] = :list }
-  option.on('-c', '--count', 'Count all occurrences of the keyword') { options[:action] = :count }
-
-  option.separator ""
-  option.separator "Git Hook options:"
-
-  option.on('--install-hook', 'Install the pre-commit hook in the current Git repository') do
-    options[:install_hook] = true
-  end
-
-  option.separator ""
-  option.separator "Other options:"
-
-  option.on('-h', '--help', 'Show this message') do
-    puts option
-    exit
-  end
-
-  option.on('-v', '--version', 'Show version') do
-    puts "Jammer version #{Jammer::VERSION}"
-    exit
-  end
-
-  option.on('-f', '--force', 'Force overwrite of existing git hooks') do
-    options[:force] = true
-  end
-
-  option.on('--uninstall-hook', 'Uninstall the pre-commit hook') do
-    options[:uninstall_hook] = true
-  end
-
-end
-
-begin
-  parser.parse!
-rescue OptionParser::InvalidOption => e
-  puts "Error: #{e.message}"
-  puts parser
-  exit 1
-end
-
-
-if options[:install_hook]
-  Jammer::HookManager.install(options)
-  exit 0
-end
-
-if options[:uninstall_hook]
-  Jammer::HookManager.uninstall
-  exit 0
-end
-
-
-case options[:action]
-when :list
-  new_jammer.occurrence_list
-  exit 0
-when :count
-  count = new_jammer.occurrence_count
-  puts count
-  exit 0
-else
-  if new_jammer.exists?
-    puts "Found keywords like '#{new_jammer.keyword}'. Aborting commit."
-    exit 1
-  else
-    exit 0
-  end
-end
+Jammer::CommandLineInterface.new(ARGV).run
