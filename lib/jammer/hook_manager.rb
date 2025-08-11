@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 
 require 'fileutils'
+require 'jammer/git'
 
 module Jammer
   class HookManager
     def self.install(options = {})
-      unless system('git rev-parse --is-inside-work-tree', out: File::NULL, err: File::NULL)
+      unless Jammer::Git.inside_work_tree?
         puts "Error: Not inside a Git repository."
         exit 1
       end
@@ -61,7 +62,7 @@ module Jammer
     end
 
     def self.uninstall
-      unless system('git rev-parse --is-inside-work-tree', out: File::NULL, err: File::NULL)
+      unless Jammer::Git.inside_work_tree?
         puts "Error: Not inside a Git repository."
         exit 1
       end

@@ -3,6 +3,7 @@
 
 require 'open3'
 require 'jammer/version'
+require 'jammer/git'
 
 module Jammer
   class CLI
@@ -24,14 +25,8 @@ module Jammer
       puts matches.join("\n")
     end
 
-    private
-
-    def inside_git_repo?
-      system('git rev-parse --is-inside-work-tree', out: File::NULL, err: File::NULL)
-    end
-
     def matches
-      if inside_git_repo?
+      if Jammer::Git.inside_work_tree?
         # Search staged files (index) to align with pre-commit use case
         stdout, _stderr, status = Open3.capture3('git', 'grep', '-nI', '--cached', '-e', @keyword)
         return [] unless status.success?
