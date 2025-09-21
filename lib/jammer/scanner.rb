@@ -23,14 +23,10 @@ module Jammer
     end
 
     def matches
-      regex_pattern = "\b#{@keyword}\b"
-
       command = if Jammer::Git.inside_work_tree?
-                  # Search staged files (index) with an extended regex.
-                  ['git', 'grep', '-nI', '-E', '--cached', '-e', regex_pattern]
+                  ['git', 'grep', '-nI', '-w', '--cached', '-e', @keyword]
                 else
-                  # Fallback for non-git directories: recursive, ignore binary, show line numbers, extended regex.
-                  ['grep', '-RInE', regex_pattern, '.']
+                  ['grep', '-RInw', @keyword, '.']
                 end
 
       stdout, stderr, status = Open3.capture3(*command)
