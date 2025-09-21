@@ -1,13 +1,21 @@
 # jammer-cli
 
 ## GOAL of this project:
-It's a basic CLI tool to stop pushing the changes to git when any of the file in working directory has the keyword like TODO, FIXME, etc..
+It is a lightweight CLI + Git pre-commit hook that prevents committing files with forbidden keywords (like TODO, FIXME, DEBUG).
+It helps keep repositories clean by enforcing code hygiene automatically.
+
+## ✅ Completed so far
+- [x] Regex-based scanning for keywords (default: #TODO).
+- [x] CLI options: custom keyword, list matches, count matches.
+- [x] Git pre-commit hook install/uninstall commands.
+- [x] Local installation via RubyGem.
+- [x] Manual keyword scanning via CLI.
 
 ## Roadmap
-- User can set the required search keyword
-- User can install this app
-- User can uninstall this app
-- Support for multiple SHELLs
+- [] Config file support (.jammer.yml) for multiple keywords and excludes.
+- [] Improved error codes (0=clean, 1=violations, 2=error).
+- [] JSON output mode for CI integration.
+
 
 ## Installation
 
