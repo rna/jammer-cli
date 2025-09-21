@@ -5,8 +5,14 @@ require_relative 'git'
 
 module Jammer
   class HookManager
-    HOOK_TEMPLATE_PATH = File.expand_path('../../../hooks/pre-commit', __dir__)
     HOOK_SIGNATURE = '# Hook installed by jammer-cli'
+
+    def self.hook_template_path
+      gem_spec = Gem.loaded_specs['jammer-cli']
+      raise 'Could not find jammer-cli gem specification' unless gem_spec
+
+      File.join(gem_spec.full_gem_path, 'hooks', 'pre-commit')
+    end
 
     def self.install(options = {})
       unless Jammer::Git.inside_work_tree?
@@ -23,7 +29,7 @@ module Jammer
         exit 1
       end
 
-      hook_content_to_install = File.read(HOOK_TEMPLATE_PATH)
+      hook_content_to_install = File.read(hook_template_path)
 
       if File.exist?(pre_commit_hook_path) && !options[:force]
         existing_content = File.read(pre_commit_hook_path)
@@ -31,7 +37,7 @@ module Jammer
         # Check if the existing hook was installed
         if existing_content.include?(HOOK_SIGNATURE)
           print "Warning: A jammer-cli hook already exists at '#{pre_commit_hook_path}'. Overwrite? [y/N] "
-          overwrite = $stdin.gets.chomp.downcase
+          overwrite = STDIN.gets.chomp.downcase
           unless overwrite == 'y'
             puts 'Aborted. Use --force to overwrite.'
             exit 0
@@ -82,10 +88,9 @@ module Jammer
         puts 'Warning: An existing pre-commit hook was found that was not installed by jammer-cli. Skipping uninstall.'
         exit 1
       end
-
       # To prevent data loss, compare the existing hook with the template.
       # If they are different, the user may have customized it.
-      template_content = File.read(HOOK_TEMPLATE_PATH)
+      template_content = File.read(hook_template_path)
 
       # Use strip to ignore potential trailing newline differences.
       if existing_content.strip == template_content.strip
