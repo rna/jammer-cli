@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
 require 'fileutils'
-require 'jammer/git'
+require_relative 'git'
 
 module Jammer
   class HookManager
+    HOOK_TEMPLATE_PATH = File.expand_path('../../../hooks/pre-commit', __dir__)
+
     def self.install(options = {})
       unless Jammer::Git.inside_work_tree?
         puts "Error: Not inside a Git repository."
@@ -31,26 +33,10 @@ module Jammer
 
       puts "Installing pre-commit hook..."
 
-      hook_content = <<~SCRIPT
-      #!/bin/sh
-      # Hook installed by jammer-cli
-
-      output=$(jammer 2>&1)
-      jammer_exit_code=$?
-
-
-      if [ $jammer_exit_code -eq 127 ]; then
-        echo "Warning: jammer command not found, skipping pre-commit check."
-        exit 0
-      elif [ $jammer_exit_code -ne 0 ]; then
-        echo "$output"
-        exit $jammer_exit_code
-      else
-        exit 0
-      fi
-      SCRIPT
-
       begin
+        # Read the hook content from the template file
+        hook_content = File.read(HOOK_TEMPLATE_PATH)
+
         File.write(pre_commit_hook_path, hook_content)
         FileUtils.chmod('+x', pre_commit_hook_path)
         puts "Successfully installed pre-commit hook to '#{pre_commit_hook_path}'"
