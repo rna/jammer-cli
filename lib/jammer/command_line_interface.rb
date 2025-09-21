@@ -16,6 +16,9 @@ module Jammer
     def run
       parse_options
       execute_command
+    rescue Jammer::Error => e
+      warn "An error occurred: #{e.message}" # Using warn prints to STDERR
+      exit 2
     end
 
     private
@@ -78,7 +81,7 @@ module Jammer
     def execute_command
       case @options[:action]
       when :list
-        @scanner.occurrence_list
+        puts @scanner.occurrence_list
         exit 0
       when :count
         puts @scanner.occurrence_count
