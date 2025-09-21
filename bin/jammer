@@ -2,10 +2,9 @@
 # frozen_string_literal: true
 
 begin
-  require 'jammer/command_line_interface'
+  require 'jammer'
 rescue LoadError
-  # Fallback for development environment when not installed
-  require_relative '../lib/jammer/command_line_interface'
+  require_relative '../lib/jammer'
 end
 
 Jammer::CommandLineInterface.new(ARGV).run

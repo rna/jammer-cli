@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 require 'optparse'
-require_relative 'version'
-require_relative 'hook_manager'
 require_relative '../jammer'
 
 module Jammer
@@ -10,7 +8,7 @@ module Jammer
     def initialize(args = ARGV)
       @args = args
       @options = {}
-      @scanner = Jammer::CLI.new
+      @scanner = Jammer::Scanner.new
     end
 
     def run
