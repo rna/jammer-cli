@@ -10,7 +10,7 @@ module Jammer
 
     def self.install(options = {})
       unless Jammer::Git.inside_work_tree?
-        puts "Error: Not inside a Git repository."
+        puts 'Error: Not inside a Git repository.'
         exit 1
       end
 
@@ -31,31 +31,31 @@ module Jammer
         # Check if the existing hook was installed
         if existing_content.include?(HOOK_SIGNATURE)
           print "Warning: A jammer-cli hook already exists at '#{pre_commit_hook_path}'. Overwrite? [y/N] "
-          overwrite = STDIN.gets.chomp.downcase
+          overwrite = $stdin.gets.chomp.downcase
           unless overwrite == 'y'
-            puts "Aborted. Use --force to overwrite."
+            puts 'Aborted. Use --force to overwrite.'
             exit 0
           end
         else
           # If it's a custom hook, refuse to overwrite and provide manual instructions.
-          warn "Warning: A custom pre-commit hook already exists."
-          warn "To avoid overwriting it, jammer-cli will not install the hook automatically."
+          warn 'Warning: A custom pre-commit hook already exists.'
+          warn 'To avoid overwriting it, jammer-cli will not install the hook automatically.'
           warn "\nPlease add the following script block to your existing '#{pre_commit_hook_path}' file to enable jammer:\n\n"
-          warn "---"
+          warn '---'
           warn hook_content_to_install.strip
           warn "---\n"
           exit 1
         end
       end
 
-      puts "Installing pre-commit hook..."
+      puts 'Installing pre-commit hook...'
 
       begin
         File.write(pre_commit_hook_path, hook_content_to_install)
         FileUtils.chmod('+x', pre_commit_hook_path)
         puts "Successfully installed pre-commit hook to '#{pre_commit_hook_path}'"
         exit 0
-      rescue => e
+      rescue StandardError => e
         puts "Error installing hook: #{e.message}"
         exit 1
       end
@@ -63,7 +63,7 @@ module Jammer
 
     def self.uninstall
       unless Jammer::Git.inside_work_tree?
-        puts "Error: Not inside a Git repository."
+        puts 'Error: Not inside a Git repository.'
         exit 1
       end
 
@@ -71,7 +71,7 @@ module Jammer
       pre_commit_hook_path = File.join(git_dir, 'hooks', 'pre-commit')
 
       unless File.exist?(pre_commit_hook_path)
-        puts "No jammer-cli pre-commit hook found to uninstall."
+        puts 'No jammer-cli pre-commit hook found to uninstall.'
         exit 0
       end
 
@@ -79,7 +79,7 @@ module Jammer
 
       # Only proceed if the hook seems to be one we installed.
       unless existing_content.include?(HOOK_SIGNATURE)
-        puts "Warning: An existing pre-commit hook was found that was not installed by jammer-cli. Skipping uninstall."
+        puts 'Warning: An existing pre-commit hook was found that was not installed by jammer-cli. Skipping uninstall.'
         exit 1
       end
 
@@ -94,14 +94,14 @@ module Jammer
           File.delete(pre_commit_hook_path)
           puts "Successfully uninstalled pre-commit hook from '#{pre_commit_hook_path}'"
           exit 0
-        rescue => e
+        rescue StandardError => e
           puts "Error uninstalling hook: #{e.message}"
           exit 1
         end
       else
         # Contents are different, so refuse to delete and warn the user.
-        warn "Warning: Your pre-commit hook has been modified and will not be removed automatically."
-        warn "To complete the uninstallation, please manually remove the jammer-cli script block from:"
+        warn 'Warning: Your pre-commit hook has been modified and will not be removed automatically.'
+        warn 'To complete the uninstallation, please manually remove the jammer-cli script block from:'
         warn "  '#{pre_commit_hook_path}'"
         exit 1
       end

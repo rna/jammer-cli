@@ -23,10 +23,10 @@ module Jammer
 
     def parse_options
       parser = OptionParser.new do |opts|
-        opts.banner = "Usage: jammer [options]"
+        opts.banner = 'Usage: jammer [options]'
 
-        opts.separator ""
-        opts.separator "Keyword checking options:"
+        opts.separator ''
+        opts.separator 'Keyword checking options:'
 
         opts.on('-a', '--keyword KEYWORD', 'Assigns a new search keyword') do |keyword|
           @scanner.keyword = keyword
@@ -40,8 +40,8 @@ module Jammer
           @options[:action] = :count
         end
 
-        opts.separator ""
-        opts.separator "Git Hook options:"
+        opts.separator ''
+        opts.separator 'Git Hook options:'
 
         opts.on('--install-hook', 'Install the pre-commit hook in the current Git repository') do
           @options[:action] = :install_hook
@@ -51,8 +51,8 @@ module Jammer
           @options[:action] = :uninstall_hook
         end
 
-        opts.separator ""
-        opts.separator "Other options:"
+        opts.separator ''
+        opts.separator 'Other options:'
 
         opts.on('-f', '--force', 'Force overwrite of existing git hooks') do
           @options[:force] = true

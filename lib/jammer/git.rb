@@ -10,5 +10,3 @@ module Jammer
     end
   end
 end
-
-
