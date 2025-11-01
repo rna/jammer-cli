@@ -14,6 +14,33 @@ module Jammer
       File.join(gem_spec.full_gem_path, 'hooks', 'pre-commit')
     end
 
+    def self.config_example_path
+      gem_spec = Gem.loaded_specs['jammer-cli']
+      raise 'Could not find jammer-cli gem specification' unless gem_spec
+
+      File.join(gem_spec.full_gem_path, '.jammer.yml.example')
+    end
+
+    def self.init_config(options = {})
+      config_path = File.join(Dir.pwd, '.jammer.yml')
+
+      if File.exist?(config_path) && !options[:force]
+        puts "Error: .jammer.yml already exists. Use --force to overwrite."
+        exit 1
+      end
+
+      begin
+        example_content = File.read(config_example_path)
+        File.write(config_path, example_content)
+        puts "Created .jammer.yml in #{Dir.pwd}"
+        puts "Edit it to customize keywords and exclude patterns for your project."
+        exit 0
+      rescue StandardError => e
+        puts "Error creating config file: #{e.message}"
+        exit 1
+      end
+    end
+
     def self.install(options = {})
       unless Jammer::Git.inside_work_tree?
         puts 'Error: Not inside a Git repository.'

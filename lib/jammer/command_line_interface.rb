@@ -52,6 +52,10 @@ module Jammer
           @options[:action] = :uninstall_hook
         end
 
+        opts.on('--init', 'Initialize .jammer.yml config file in current directory') do
+          @options[:action] = :init
+        end
+
         opts.separator ''
         opts.separator 'Other options:'
 
@@ -90,6 +94,9 @@ module Jammer
         exit 0
       when :uninstall_hook
         Jammer::HookManager.uninstall
+        exit 0
+      when :init
+        Jammer::HookManager.init_config(@options)
         exit 0
       else
         check_keywords

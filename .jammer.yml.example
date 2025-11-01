@@ -1,0 +1,18 @@
+# Jammer CLI Configuration File
+# Copy this to .jammer.yml and customize for your project
+
+keywords:
+  - FIXME
+  - DEBUG
+  - XXX
+  - HACK
+  - TODO
+
+exclude:
+  - vendor/
+  - node_modules/
+  - .git/
+  - tmp/
+  - spec/fixtures/
+  - build/
+  - dist/
