@@ -55,7 +55,7 @@ module Jammer
         opts.separator ''
         opts.separator 'Other options:'
 
-        opts.on('-f', '--force', 'Force overwrite of existing git hooks') do
+        opts.on('-f', '--force', 'Force overwrite of existing config and hooks') do
           @options[:force] = true
         end
 
