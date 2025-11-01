@@ -7,10 +7,10 @@ It helps keep repositories clean by enforcing code hygiene automatically.
 ## Features
 - [x] Regex-based scanning for keywords (default: #TODO).
 - [x] CLI options: custom keyword, list matches, count matches.
-- [x] Git pre-commit hook install/uninstall commands.
+- [x] One-command setup and cleanup: `jammer --init` and `jammer --uninstall`
 - [x] Local installation via RubyGem.
-- [x] Manual keyword scanning via CLI.
-- [x] Config file support (.jammer.yml) for multiple keywords and excludes.
+- [x] Config file support (.jammer.yml) with multiple keywords and exclude patterns.
+- [x] GitHub/ESLint-style configuration format.
 
 ## Installation
 
@@ -30,42 +30,70 @@ It helps keep repositories clean by enforcing code hygiene automatically.
     gem install ./jammer-cli-0.1.0.gem
     ```
 
-## Usage
+## Quick Start
 
-### Setting up the Git Pre-Commit Hook
-
-Once the gem is installed, navigate to the root directory of any Git repository where you want to enable the check, and run:
+Initialize jammer in your project (creates config + installs Git hook):
 
 ```bash
-jammer --install-hook
+jammer --init
 ```
 
-This will create or update the `.git/hooks/pre-commit` script for that specific repository.
+This will:
+1. Create `.jammer.yml` based on [`.jammer.yml.example`](.jammer.yml.example)
+2. Install the Git pre-commit hook automatically (if in a Git repository)
 
-Now, before you commit in that repository, Git will automatically run `jammer`. If it finds the configured keyword (default: `#TODO`), it will abort the commit.
+Edit `.jammer.yml` to customize keywords and exclude patterns for your project.
 
-### Checking for Keywords Manually
+### Removing Jammer
+
+To completely remove jammer from your project:
 
 ```bash
-# Check using default keyword (#TODO)
+jammer --uninstall
+```
+
+This will remove both `.jammer.yml` and the Git pre-commit hook.
+
+## Configuration
+
+### Config File Format
+
+The `.jammer.yml` file follows the GitHub/ESLint config pattern. See [`.jammer.yml.example`](.jammer.yml.example) for a complete example.
+
+**`keywords`** - List of patterns to search for (default: `#TODO`)
+
+**`exclude`** - List of path patterns to skip during scanning
+
+## Usage
+
+### Check for Keywords Manually
+
+```bash
+# Check using configured keywords from .jammer.yml
 jammer
 
 # Check using a custom keyword
 jammer --keyword FIXME
 
-# List occurrences
+# List all occurrences with file paths
 jammer --list
 
-# Count occurrences
+# Count total occurrences
 jammer --count
 ```
 
-## Uninstallation
+### Force Overwrite
+
+Use `--force` flag with `--init` to overwrite existing config:
 
 ```bash
-# Uninstall the gem
-gem uninstall jammer-cli
-
-# Note: This does NOT remove the pre-commit hooks changed in individual repositories.
-# You need to manually delete the .git/hooks/pre-commit file in those repos if desired.
+jammer --init --force
 ```
+
+## Uninstalling the Gem
+
+```bash
+gem uninstall jammer-cli
+```
+
+Note: This does NOT remove the configuration and hooks from all individual repositories. Use `jammer --uninstall` in each project to clean up.
