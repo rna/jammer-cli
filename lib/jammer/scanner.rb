@@ -10,11 +10,13 @@ module Jammer
       @keywords = Array(keywords)
       validate_keywords
       @exclude_patterns = exclude_patterns
+      @matches_cache = nil
     end
 
     def keywords=(value)
       @keywords = Array(value)
       validate_keywords
+      @matches_cache = nil
     end
 
     def keyword
@@ -22,18 +24,19 @@ module Jammer
     end
 
     def keyword=(value)
-      raise Jammer::Error, 'Keyword cannot be empty' if value.to_s.strip.empty?
-      raise Jammer::Error, 'Keyword is too long (max 100 chars)' if value.length > 100
+      raise Jammer::ScannerError, 'Keyword cannot be empty' if value.to_s.strip.empty?
+      raise Jammer::ScannerError, 'Keyword is too long (max 100 chars)' if value.length > 100
 
       @keywords = [value]
+      @matches_cache = nil
     end
 
     private
 
     def validate_keywords
       @keywords.each do |kw|
-        raise Jammer::Error, 'Keyword cannot be empty' if kw.to_s.strip.empty?
-        raise Jammer::Error, 'Keyword is too long (max 100 chars)' if kw.length > 100
+        raise Jammer::ScannerError, 'Keyword cannot be empty' if kw.to_s.strip.empty?
+        raise Jammer::ScannerError, 'Keyword is too long (max 100 chars)' if kw.length > 100
       end
     end
 
@@ -52,15 +55,17 @@ module Jammer
     end
 
     def matches
+      return @matches_cache unless @matches_cache.nil?
+
       command = build_command
       stdout, stderr, status = Open3.capture3(*command)
 
       if !status.success? && status.exitstatus != 1
-        raise Jammer::Error, "Error executing search command. STDERR:\n#{stderr}"
+        raise Jammer::ScannerError, "Error executing search command. STDERR:\n#{stderr}"
       end
 
       results = stdout.lines.map(&:chomp)
-      filter_excluded_patterns(results)
+      @matches_cache = filter_excluded_patterns(results)
     end
 
     private
