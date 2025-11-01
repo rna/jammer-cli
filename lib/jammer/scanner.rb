@@ -52,12 +52,7 @@ module Jammer
     end
 
     def matches
-      command = if Jammer::Git.inside_work_tree?
-                  ['git', 'grep', '-nI', '-w', '--cached', '-e', @keyword]
-                else
-                  ['grep', '-RInw', @keyword, '.']
-                end
-
+      command = build_command
       stdout, stderr, status = Open3.capture3(*command)
 
       if !status.success? && status.exitstatus != 1
@@ -69,6 +64,27 @@ module Jammer
     end
 
     private
+
+    def build_command
+      if Jammer::Git.inside_work_tree?
+        git_command
+      else
+        grep_command
+      end
+    end
+
+    def git_command
+      cmd = ['git', 'grep', '-nI', '-w', '--cached']
+      @keywords.each { |kw| cmd << '-e' << kw }
+      cmd
+    end
+
+    def grep_command
+      cmd = ['grep', '-RIn', '-w']
+      @keywords.each { |kw| cmd << '-e' << kw }
+      cmd << '.'
+      cmd
+    end
 
     def filter_excluded_patterns(results)
       return results if @exclude_patterns.empty?
