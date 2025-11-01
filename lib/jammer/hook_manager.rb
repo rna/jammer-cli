@@ -9,14 +9,14 @@ module Jammer
 
     def self.hook_template_path
       gem_spec = Gem.loaded_specs['jammer-cli']
-      raise 'Could not find jammer-cli gem specification' unless gem_spec
+      raise HookError, 'jammer-cli gem specification not found' unless gem_spec
 
       File.join(gem_spec.full_gem_path, 'hooks', 'pre-commit')
     end
 
     def self.config_example_path
       gem_spec = Gem.loaded_specs['jammer-cli']
-      raise 'Could not find jammer-cli gem specification' unless gem_spec
+      raise HookError, 'jammer-cli gem specification not found' unless gem_spec
 
       File.join(gem_spec.full_gem_path, '.jammer.yml.example')
     end
@@ -25,27 +25,20 @@ module Jammer
       config_path = File.join(Dir.pwd, '.jammer.yml')
 
       if File.exist?(config_path) && !options[:force]
-        puts "Error: .jammer.yml already exists. Use --force to overwrite."
-        exit 1
+        raise HookError, '.jammer.yml already exists. Use --force to overwrite.'
       end
 
       begin
         example_content = File.read(config_example_path)
         File.write(config_path, example_content)
-        puts "✓ Created .jammer.yml"
       rescue StandardError => e
-        puts "Error creating config file: #{e.message}"
-        exit 1
+        raise HookError, "Error creating config file: #{e.message}"
       end
 
-      if Jammer::Git.inside_work_tree?
-        puts "✓ Setting up Git pre-commit hook..."
-        install_hook(options)
-      else
-        puts ""
-        puts "Note: Not in a Git repository. Run 'jammer --init' from a Git repository to install the hook."
-        exit 0
-      end
+      # Return early if not in git repo, but don't fail
+      return unless Jammer::Git.inside_work_tree?
+
+      install_hook(options)
     end
 
     def self.uninstall_config
@@ -56,37 +49,11 @@ module Jammer
       hook_exists = hook_path && File.exist?(hook_path)
 
       unless config_exists || hook_exists
-        puts "Nothing to uninstall. No .jammer.yml or git hook found."
-        exit 0
+        raise HookError, 'Nothing to uninstall. No .jammer.yml or git hook found.'
       end
 
-      if config_exists
-        begin
-          File.delete(config_path)
-          puts "✓ Removed .jammer.yml"
-        rescue StandardError => e
-          puts "Error removing config file: #{e.message}"
-          exit 1
-        end
-      end
-
-      if hook_exists && hook_path
-        begin
-          hook_content = File.read(hook_path)
-          if hook_content.include?(HOOK_SIGNATURE)
-            File.delete(hook_path)
-            puts "✓ Removed Git pre-commit hook"
-          else
-            puts "Note: Custom pre-commit hook found (not created by jammer). Skipping removal."
-          end
-        rescue StandardError => e
-          puts "Error removing hook: #{e.message}"
-          exit 1
-        end
-      end
-
-      puts "Jammer has been uninstalled from this project."
-      exit 0
+      remove_config_file(config_path) if config_exists
+      remove_hook_file(hook_path) if hook_exists && hook_path
     end
 
     private
@@ -98,45 +65,57 @@ module Jammer
       File.join(git_dir, 'hooks', 'pre-commit')
     end
 
+    def self.remove_config_file(config_path)
+      File.delete(config_path)
+    rescue StandardError => e
+      raise HookError, "Error removing config file: #{e.message}"
+    end
+
+    def self.remove_hook_file(hook_path)
+      hook_content = File.read(hook_path)
+
+      unless hook_content.include?(HOOK_SIGNATURE)
+        raise HookError, 'Custom pre-commit hook found (not created by jammer). Skipping removal.'
+      end
+
+      File.delete(hook_path)
+    rescue StandardError => e
+      raise HookError, "Error removing hook: #{e.message}"
+    end
+
     def self.install_hook(options = {})
       git_dir = `git rev-parse --git-dir`.strip
       hooks_dir = File.join(git_dir, 'hooks')
       pre_commit_hook_path = File.join(hooks_dir, 'pre-commit')
 
       unless Dir.exist?(hooks_dir)
-        puts "Error: '.git/hooks' directory not found."
-        exit 1
+        raise HookError, '.git/hooks directory not found'
       end
 
       hook_content_to_install = File.read(hook_template_path)
 
       if File.exist?(pre_commit_hook_path) && !options[:force]
-        existing_content = File.read(pre_commit_hook_path)
-
-        if existing_content.include?(HOOK_SIGNATURE)
-          print "Warning: A jammer-cli hook already exists. Overwrite? [y/N] "
-          overwrite = STDIN.gets.chomp.downcase
-          unless overwrite == 'y'
-            puts 'Aborted. Use --force to overwrite.'
-            exit 0
-          end
-        else
-          warn 'Warning: A custom pre-commit hook already exists.'
-          warn 'To avoid overwriting it, jammer-cli will not install the hook automatically.'
-          warn "\nPlease manually add jammer to your existing hook."
-          exit 1
-        end
+        handle_existing_hook(pre_commit_hook_path, hook_content_to_install)
       end
 
-      begin
-        File.write(pre_commit_hook_path, hook_content_to_install)
-        FileUtils.chmod('+x', pre_commit_hook_path)
-        puts "✓ Successfully installed pre-commit hook"
-        exit 0
-      rescue StandardError => e
-        puts "Error installing hook: #{e.message}"
-        exit 1
+      write_hook_file(pre_commit_hook_path, hook_content_to_install)
+    end
+
+    def self.handle_existing_hook(hook_path, hook_content)
+      existing_content = File.read(hook_path)
+
+      if existing_content.include?(HOOK_SIGNATURE)
+        raise HookError, 'A jammer-cli hook already exists. Use --force to overwrite.'
+      else
+        raise HookError, 'A custom pre-commit hook already exists. Cannot auto-install.'
       end
+    end
+
+    def self.write_hook_file(hook_path, content)
+      File.write(hook_path, content)
+      FileUtils.chmod('+x', hook_path)
+    rescue StandardError => e
+      raise HookError, "Error installing hook: #{e.message}"
     end
   end
 end

@@ -9,4 +9,8 @@ require_relative 'jammer/command_line_interface'
 
 module Jammer
   class Error < StandardError; end
+  class ConfigError < Error; end
+  class GitError < Error; end
+  class HookError < Error; end
+  class ScannerError < Error; end
 end
