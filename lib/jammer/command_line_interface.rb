@@ -95,16 +95,23 @@ module Jammer
     end
 
     def handle_init
-      Jammer::HookManager.init_config(@options)
-      puts "✓ Created .jammer.yml"
+      status = Jammer::HookManager.init_config(@options)
 
-      if Jammer::Git.inside_work_tree?
-        puts "✓ Setting up Git pre-commit hook..."
-        puts "✓ Successfully installed pre-commit hook"
+      if status[:config_created]
+        puts "✓ Created .jammer.yml"
       else
+        puts "ℹ .jammer.yml already exists"
+      end
+
+      if status[:hook_created]
+        puts "✓ Successfully installed pre-commit hook"
+      elsif !Jammer::Git.inside_work_tree?
         puts ""
         puts "Note: Not in a Git repository. Run 'jammer --init' from a Git repository to install the hook."
+      else
+        puts "ℹ Git pre-commit hook already exists"
       end
+
       exit 0
     rescue Jammer::HookError => e
       warn "Error: #{e.message}"

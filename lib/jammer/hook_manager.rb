@@ -24,22 +24,28 @@ module Jammer
 
     def self.init_config(options = {})
       config_path = File.join(Dir.pwd, '.jammer.yml')
+      config_exists = File.exist?(config_path)
+      status = { config_created: false, hook_created: false }
 
-      if File.exist?(config_path) && !options[:force]
-        raise HookError, '.jammer.yml already exists. Use --force to overwrite.'
+      # Setup config file (independent of hook)
+      unless config_exists && !options[:force]
+        setup_config_file(config_path, options)
+        status[:config_created] = true
       end
 
-      begin
-        example_content = File.read(config_example_path)
-        File.write(config_path, example_content)
-      rescue StandardError => e
-        raise HookError, "Error creating config file: #{e.message}"
+      # Setup hook file if in git repo (independent of config status)
+      if Jammer::Git.inside_work_tree?
+        hook_path = get_hook_path
+        hook_exists = hook_path && File.exist?(hook_path)
+
+        # Only mark as created if hook didn't exist before
+        unless hook_exists && !options[:force] && hook_already_by_jammer?(hook_path)
+          install_hook(options)
+          status[:hook_created] = !hook_exists
+        end
       end
 
-      # Return early if not in git repo, but don't fail
-      return unless Jammer::Git.inside_work_tree?
-
-      install_hook(options)
+      status
     end
 
     def self.uninstall_config
@@ -58,6 +64,21 @@ module Jammer
     end
 
     private
+
+    def self.hook_already_by_jammer?(hook_path)
+      return false unless hook_path && File.exist?(hook_path)
+
+      File.read(hook_path).include?(HOOK_SIGNATURE)
+    end
+
+    def self.setup_config_file(config_path, options = {})
+      begin
+        example_content = File.read(config_example_path)
+        File.write(config_path, example_content)
+      rescue StandardError => e
+        raise HookError, "Error creating config file: #{e.message}"
+      end
+    end
 
     def self.get_hook_path
       return nil unless Jammer::Git.inside_work_tree?
@@ -99,23 +120,19 @@ module Jammer
         raise HookError, '.git/hooks directory not found'
       end
 
-      hook_content_to_install = File.read(hook_template_path)
-
       if File.exist?(pre_commit_hook_path) && !options[:force]
-        handle_existing_hook(pre_commit_hook_path, hook_content_to_install)
+        existing_content = File.read(pre_commit_hook_path)
+
+        if existing_content.include?(HOOK_SIGNATURE)
+          # Jammer hook already exists - return silently (skip)
+          return
+        else
+          raise HookError, 'A custom pre-commit hook already exists. Cannot auto-install.'
+        end
       end
 
+      hook_content_to_install = File.read(hook_template_path)
       write_hook_file(pre_commit_hook_path, hook_content_to_install)
-    end
-
-    def self.handle_existing_hook(hook_path, hook_content)
-      existing_content = File.read(hook_path)
-
-      if existing_content.include?(HOOK_SIGNATURE)
-        raise HookError, 'A jammer-cli hook already exists. Use --force to overwrite.'
-      else
-        raise HookError, 'A custom pre-commit hook already exists. Cannot auto-install.'
-      end
     end
 
     def self.write_hook_file(hook_path, content)
