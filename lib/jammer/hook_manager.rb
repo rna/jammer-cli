@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'fileutils'
+require 'open3'
 require_relative 'git'
 
 module Jammer
@@ -61,7 +62,10 @@ module Jammer
     def self.get_hook_path
       return nil unless Jammer::Git.inside_work_tree?
 
-      git_dir = `git rev-parse --git-dir`.strip
+      stdout, _stderr, status = Open3.capture3('git', 'rev-parse', '--git-dir')
+      raise GitError, 'Failed to get git directory' unless status.success?
+
+      git_dir = stdout.strip
       File.join(git_dir, 'hooks', 'pre-commit')
     end
 
@@ -84,7 +88,10 @@ module Jammer
     end
 
     def self.install_hook(options = {})
-      git_dir = `git rev-parse --git-dir`.strip
+      stdout, _stderr, status = Open3.capture3('git', 'rev-parse', '--git-dir')
+      raise GitError, 'Failed to get git directory' unless status.success?
+
+      git_dir = stdout.strip
       hooks_dir = File.join(git_dir, 'hooks')
       pre_commit_hook_path = File.join(hooks_dir, 'pre-commit')
 
