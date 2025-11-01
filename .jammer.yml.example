@@ -1,5 +1,5 @@
 # Jammer CLI Configuration File
-# Copy this to .jammer.yml and customize for your project
+# Customize this file as per your project requirements
 
 keywords:
   - FIXME
@@ -16,3 +16,5 @@ exclude:
   - spec/fixtures/
   - build/
   - dist/
+  - README
+  - .jammer.yml
