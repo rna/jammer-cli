@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'jammer/version'
+require_relative 'jammer/config'
 require_relative 'jammer/git'
 require_relative 'jammer/hook_manager'
 require_relative 'jammer/scanner'

@@ -5,10 +5,11 @@ require_relative '../jammer'
 
 module Jammer
   class CommandLineInterface
-    def initialize(args = ARGV)
+    def initialize(args = ARGV, config: nil)
       @args = args
       @options = {}
-      @scanner = Jammer::Scanner.new
+      @config = config || Jammer::Config.new
+      @scanner = Jammer::Scanner.new(@config.keywords.first, @config.exclude)
     end
 
     def run

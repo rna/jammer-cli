@@ -4,10 +4,18 @@ require 'open3'
 
 module Jammer
   class Scanner
-    attr_accessor :keyword
+    attr_reader :keyword, :exclude_patterns
 
-    def initialize(keyword = '#TODO')
+    def initialize(keyword, exclude_patterns = [])
       @keyword = keyword
+      @exclude_patterns = exclude_patterns
+    end
+
+    def keyword=(value)
+      raise Jammer::Error, 'Keyword cannot be empty' if value.to_s.strip.empty?
+      raise Jammer::Error, 'Keyword is too long (max 100 chars)' if value.length > 100
+
+      @keyword = value
     end
 
     def exists?
@@ -35,7 +43,18 @@ module Jammer
         raise Jammer::Error, "Error executing search command. STDERR:\n#{stderr}"
       end
 
-      stdout.lines.map(&:chomp)
+      results = stdout.lines.map(&:chomp)
+      filter_excluded_patterns(results)
+    end
+
+    private
+
+    def filter_excluded_patterns(results)
+      return results if @exclude_patterns.empty?
+
+      results.reject do |line|
+        @exclude_patterns.any? { |pattern| line.include?(pattern) }
+      end
     end
   end
 end
