@@ -42,18 +42,14 @@ module Jammer
         end
 
         opts.separator ''
-        opts.separator 'Git Hook options:'
+        opts.separator 'Setup options:'
 
-        opts.on('--install-hook', 'Install the pre-commit hook in the current Git repository') do
-          @options[:action] = :install_hook
-        end
-
-        opts.on('--uninstall-hook', 'Uninstall the pre-commit hook') do
-          @options[:action] = :uninstall_hook
-        end
-
-        opts.on('--init', 'Initialize .jammer.yml config file in current directory') do
+        opts.on('--init', 'Initialize jammer in current project (creates config + git hook)') do
           @options[:action] = :init
+        end
+
+        opts.on('--uninstall', 'Remove jammer from current project (removes config + git hook)') do
+          @options[:action] = :uninstall
         end
 
         opts.separator ''
@@ -89,14 +85,11 @@ module Jammer
       when :count
         puts @scanner.occurrence_count
         exit 0
-      when :install_hook
-        Jammer::HookManager.install(@options)
-        exit 0
-      when :uninstall_hook
-        Jammer::HookManager.uninstall
-        exit 0
       when :init
         Jammer::HookManager.init_config(@options)
+        exit 0
+      when :uninstall
+        Jammer::HookManager.uninstall_config
         exit 0
       else
         check_keywords
