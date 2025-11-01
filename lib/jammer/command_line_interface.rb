@@ -86,14 +86,40 @@ module Jammer
         puts @scanner.occurrence_count
         exit 0
       when :init
-        Jammer::HookManager.init_config(@options)
-        exit 0
+        handle_init
       when :uninstall
-        Jammer::HookManager.uninstall_config
-        exit 0
+        handle_uninstall
       else
         check_keywords
       end
+    end
+
+    def handle_init
+      Jammer::HookManager.init_config(@options)
+      puts "✓ Created .jammer.yml"
+
+      if Jammer::Git.inside_work_tree?
+        puts "✓ Setting up Git pre-commit hook..."
+        puts "✓ Successfully installed pre-commit hook"
+      else
+        puts ""
+        puts "Note: Not in a Git repository. Run 'jammer --init' from a Git repository to install the hook."
+      end
+      exit 0
+    rescue Jammer::HookError => e
+      warn "Error: #{e.message}"
+      exit 1
+    end
+
+    def handle_uninstall
+      Jammer::HookManager.uninstall_config
+      puts "✓ Removed .jammer.yml"
+      puts "✓ Removed Git pre-commit hook"
+      puts "Jammer has been uninstalled from this project."
+      exit 0
+    rescue Jammer::HookError => e
+      warn "Error: #{e.message}"
+      exit 1
     end
 
     def check_keywords
