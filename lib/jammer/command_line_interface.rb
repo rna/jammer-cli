@@ -9,7 +9,7 @@ module Jammer
       @args = args
       @options = {}
       @config = config || Jammer::Config.new
-      @scanner = Jammer::Scanner.new(@config.keywords.first, @config.exclude)
+      @scanner = Jammer::Scanner.new(@config.keywords, @config.exclude)
     end
 
     def run
@@ -98,7 +98,8 @@ module Jammer
 
     def check_keywords
       if @scanner.exists?
-        puts "Found keywords like '#{@scanner.keyword}'. Aborting commit."
+        keywords_str = @scanner.keywords.join(", ")
+        puts "Found keywords: #{keywords_str}. Aborting commit."
         exit 1
       else
         exit 0
