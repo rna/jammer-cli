@@ -38,4 +38,3 @@ jobs:
 
     - name: Run Rubocop
       run: bundle exec rubocop --display-cop-names
-      continue-on-error: true
