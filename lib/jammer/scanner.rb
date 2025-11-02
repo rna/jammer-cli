@@ -10,13 +10,11 @@ module Jammer
       @keywords = Array(keywords)
       validate_keywords
       @exclude_patterns = exclude_patterns
-      @matches_cache = nil
     end
 
     def keywords=(value)
       @keywords = Array(value)
       validate_keywords
-      @matches_cache = nil
     end
 
     def keyword
@@ -28,7 +26,6 @@ module Jammer
       raise Jammer::ScannerError, 'Keyword is too long (max 100 chars)' if value.length > 100
 
       @keywords = [value]
-      @matches_cache = nil
     end
 
     private
@@ -55,8 +52,6 @@ module Jammer
     end
 
     def matches
-      return @matches_cache unless @matches_cache.nil?
-
       command = build_command
       stdout, stderr, status = Open3.capture3(*command)
 
@@ -65,7 +60,7 @@ module Jammer
       end
 
       results = stdout.lines.map(&:chomp)
-      @matches_cache = filter_excluded_patterns(results)
+      filter_excluded_patterns(results)
     end
 
     private
