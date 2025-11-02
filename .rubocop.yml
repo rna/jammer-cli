@@ -1,0 +1,43 @@
+AllCops:
+  TargetRubyVersion: 3.1
+  NewCops: enable
+  Exclude:
+    - 'bin/setup'
+    - 'bin/console'
+    - 'vendor/**/*'
+    - 'gemfiles/**/*'
+
+# Relaxed for our project
+Metrics/ClassLength:
+  Max: 100
+
+Metrics/MethodLength:
+  Max: 10
+
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/**/*'
+    - 'Rakefile'
+    - '*.gemspec'
+
+Metrics/AbcSize:
+  Max: 17
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Layout/LineLength:
+  Max: 120
+
+# Allow frozen string literals comment
+Style/FrozenStringLiteralComment:
+  Enabled: true
+  EnforcedStyle: always
+
+# Documentation
+Style/Documentation:
+  Enabled: false
+
+# Naming
+Naming/VariableNumber:
+  Enabled: false
