@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require 'open3'
-require_relative 'search_tool'
-require_relative 'git_grep_tool'
-require_relative 'grep_tool'
+require "open3"
+require_relative "search_tool"
+require_relative "git_grep_tool"
+require_relative "grep_tool"
 
 module Jammer
   class Scanner
@@ -26,8 +26,8 @@ module Jammer
     end
 
     def keyword=(value)
-      raise Jammer::ScannerError, 'Keyword cannot be empty' if value.to_s.strip.empty?
-      raise Jammer::ScannerError, 'Keyword is too long (max 100 chars)' if value.length > 100
+      raise Jammer::ScannerError, "Keyword cannot be empty" if value.to_s.strip.empty?
+      raise Jammer::ScannerError, "Keyword is too long (max 100 chars)" if value.length > 100
 
       @keywords = [value]
     end
@@ -36,8 +36,8 @@ module Jammer
 
     def validate_keywords
       @keywords.each do |kw|
-        raise Jammer::ScannerError, 'Keyword cannot be empty' if kw.to_s.strip.empty?
-        raise Jammer::ScannerError, 'Keyword is too long (max 100 chars)' if kw.length > 100
+        raise Jammer::ScannerError, "Keyword cannot be empty" if kw.to_s.strip.empty?
+        raise Jammer::ScannerError, "Keyword is too long (max 100 chars)" if kw.length > 100
       end
     end
 

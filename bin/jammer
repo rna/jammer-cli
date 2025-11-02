@@ -2,9 +2,9 @@
 # frozen_string_literal: true
 
 begin
-  require 'jammer'
+  require "jammer"
 rescue LoadError
-  require_relative '../lib/jammer'
+  require_relative "../lib/jammer"
 end
 
 Jammer::CommandLineInterface.new(ARGV).run

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-  # Handles all output formatting and display
+# Handles all output formatting and display
 module Jammer
   class OutputFormatter
     def self.version
@@ -16,19 +16,19 @@ module Jammer
     end
 
     def self.config_created
-      '✓ Created .jammer.yml'
+      "✓ Created .jammer.yml"
     end
 
     def self.config_already_exists
-      'ℹ .jammer.yml already exists'
+      "ℹ .jammer.yml already exists"
     end
 
     def self.hook_created
-      '✓ Successfully installed pre-commit hook'
+      "✓ Successfully installed pre-commit hook"
     end
 
     def self.hook_already_exists
-      'ℹ Git pre-commit hook already exists'
+      "ℹ Git pre-commit hook already exists"
     end
 
     def self.not_in_git_repo
@@ -39,15 +39,15 @@ module Jammer
     end
 
     def self.config_removed
-      '✓ Removed .jammer.yml'
+      "✓ Removed .jammer.yml"
     end
 
     def self.hook_removed
-      '✓ Removed Git pre-commit hook'
+      "✓ Removed Git pre-commit hook"
     end
 
     def self.uninstall_complete
-      'Jammer has been uninstalled from this project.'
+      "Jammer has been uninstalled from this project."
     end
 
     def self.error(message)

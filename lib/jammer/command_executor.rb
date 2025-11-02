@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'open3'
+require "open3"
 
 module Jammer
   class CommandExecutor
@@ -37,7 +37,7 @@ module Jammer
         failed.each do |result|
           lines << "\nCommand: #{result[:command]}"
           lines << "Exit code: #{result[:exit_code]}"
-          lines << "Output:\n#{result[:output]}" if result[:output].strip.length > 0
+          lines << "Output:\n#{result[:output]}" if result[:output].strip.length.positive?
         end
       end
 
@@ -53,7 +53,7 @@ module Jammer
         command: command,
         success: status.success?,
         exit_code: status.exitstatus,
-        output: (stdout + stderr).force_encoding('UTF-8').gsub("\uFFFD", '')
+        output: (stdout + stderr).force_encoding("UTF-8").gsub("\uFFFD", "")
       }
     end
   end

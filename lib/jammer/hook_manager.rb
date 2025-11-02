@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require 'fileutils'
-require 'open3'
-require_relative 'git'
-require_relative 'path_resolver'
-require_relative 'config_manager'
+require "fileutils"
+require "open3"
+require_relative "git"
+require_relative "path_resolver"
+require_relative "config_manager"
 
 module Jammer
   class HookManager
-    HOOK_SIGNATURE = '# Hook installed by jammer-cli'
+    HOOK_SIGNATURE = "# Hook installed by jammer-cli"
 
     def self.init_config(options = {})
       status = { config_created: false, hook_created: false }
@@ -36,15 +36,11 @@ module Jammer
       hook_path = PathResolver.hook_path
       hook_exists = hook_path && File.exist?(hook_path)
 
-      unless config_exists || hook_exists
-        raise HookError, 'Nothing to uninstall. No .jammer.yml or git hook found.'
-      end
+      raise HookError, "Nothing to uninstall. No .jammer.yml or git hook found." unless config_exists || hook_exists
 
       ConfigManager.remove if config_exists
       remove_hook_file(hook_path) if hook_exists && hook_path
     end
-
-    private
 
     def self.hook_already_by_jammer?(hook_path)
       return false unless hook_path && File.exist?(hook_path)
@@ -56,7 +52,7 @@ module Jammer
       hook_content = File.read(hook_path)
 
       unless hook_content.include?(HOOK_SIGNATURE)
-        raise HookError, 'Custom pre-commit hook found (not created by jammer). Skipping removal.'
+        raise HookError, "Custom pre-commit hook found (not created by jammer). Skipping removal."
       end
 
       File.delete(hook_path)
@@ -68,19 +64,17 @@ module Jammer
       hook_path = PathResolver.hook_path
       hooks_dir = File.dirname(hook_path)
 
-      unless Dir.exist?(hooks_dir)
-        raise HookError, '.git/hooks directory not found'
-      end
+      raise HookError, ".git/hooks directory not found" unless Dir.exist?(hooks_dir)
 
       if File.exist?(hook_path) && !options[:force]
         existing_content = File.read(hook_path)
 
-        if existing_content.include?(HOOK_SIGNATURE)
-          # Jammer hook already exists - return silently (skip)
-          return
-        else
-          raise HookError, 'A custom pre-commit hook already exists. Cannot auto-install.'
-        end
+        return if existing_content.include?(HOOK_SIGNATURE)
+
+        # Jammer hook already exists - return silently (skip)
+
+        raise HookError, "A custom pre-commit hook already exists. Cannot auto-install."
+
       end
 
       hook_content_to_install = File.read(PathResolver.hook_template_path)
@@ -89,7 +83,7 @@ module Jammer
 
     def self.write_hook_file(hook_path, content)
       File.write(hook_path, content)
-      FileUtils.chmod('+x', hook_path)
+      FileUtils.chmod("+x", hook_path)
     rescue StandardError => e
       raise HookError, "Error installing hook: #{e.message}"
     end

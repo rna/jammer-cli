@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'path_resolver'
+require_relative "path_resolver"
 
 # Manages configuration file operations
 module Jammer
@@ -20,9 +20,7 @@ module Jammer
     def self.remove
       config_path = PathResolver.config_path
 
-      unless File.exist?(config_path)
-        raise HookError, 'No .jammer.yml found to remove.'
-      end
+      raise HookError, "No .jammer.yml found to remove." unless File.exist?(config_path)
 
       File.delete(config_path)
     rescue StandardError => e
@@ -33,15 +31,11 @@ module Jammer
       File.exist?(PathResolver.config_path)
     end
 
-    private
-
     def self.create_config_file(config_path)
-      begin
-        example_content = File.read(PathResolver.config_example_path)
-        File.write(config_path, example_content)
-      rescue StandardError => e
-        raise HookError, "Error creating config file: #{e.message}"
-      end
+      example_content = File.read(PathResolver.config_example_path)
+      File.write(config_path, example_content)
+    rescue StandardError => e
+      raise HookError, "Error creating config file: #{e.message}"
     end
   end
 end

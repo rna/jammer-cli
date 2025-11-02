@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative '../jammer'
-require_relative 'command_parser'
-require_relative 'output_formatter'
+require_relative "../jammer"
+require_relative "command_parser"
+require_relative "output_formatter"
 
 module Jammer
   class CommandLineInterface

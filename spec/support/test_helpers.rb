@@ -3,7 +3,7 @@
 module TestHelpers
   # Create a temporary directory with git
   def create_test_git_repo
-    test_dir = Dir.mktmpdir('jammer-test-')
+    test_dir = Dir.mktmpdir("jammer-test-")
     Dir.chdir(test_dir) do
       `git init --initial-branch=main`
       `git config user.email "test@example.com"`
@@ -16,7 +16,7 @@ module TestHelpers
 
   # Create a temporary non-git directory
   def create_test_directory
-    test_dir = Dir.mktmpdir('jammer-test-')
+    test_dir = Dir.mktmpdir("jammer-test-")
     Dir.chdir(test_dir) do
       yield test_dir if block_given?
     end
@@ -25,9 +25,9 @@ module TestHelpers
   end
 
   # Create a file with specific content
-  def create_file(path, content = '')
+  def create_file(path, content = "")
     dir = File.dirname(path)
-    FileUtils.mkdir_p(dir) unless Dir.exist?(dir)
+    FileUtils.mkdir_p(dir)
     File.write(path, content)
   end
 end
