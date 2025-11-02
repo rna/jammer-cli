@@ -1,6 +1,7 @@
 # Jammer CLI Configuration File
 # Customize this file as per your project requirements
 
+# Keywords to check for in source code
 keywords:
   - FIXME
   - DEBUG
@@ -8,6 +9,7 @@ keywords:
   - HACK
   - TODO
 
+# Patterns to exclude from keyword checks
 exclude:
   - vendor/
   - node_modules/
@@ -18,3 +20,15 @@ exclude:
   - dist/
   - README
   - .jammer.yml
+
+# Commands to run as pre-commit checks
+# All commands must pass (exit code 0) for commit to succeed
+commands:
+  # Example: Run rubocop linter
+  # - rubocop
+
+  # Example: Run rspec tests with fail-fast
+  # - bundle exec rspec --fail-fast
+
+  # Example: Custom lint script
+  # - ./scripts/lint.sh
