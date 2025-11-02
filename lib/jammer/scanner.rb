@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 require 'open3'
+require_relative 'search_tool'
+require_relative 'git_grep_tool'
+require_relative 'grep_tool'
 
 module Jammer
   class Scanner
@@ -10,6 +13,7 @@ module Jammer
       @keywords = Array(keywords)
       validate_keywords
       @exclude_patterns = exclude_patterns
+      @search_tool = select_search_tool
     end
 
     def keywords=(value)
@@ -52,7 +56,7 @@ module Jammer
     end
 
     def matches
-      command = build_command
+      command = @search_tool.build_command
       stdout, stderr, status = Open3.capture3(*command)
 
       if !status.success? && status.exitstatus != 1
@@ -65,25 +69,12 @@ module Jammer
 
     private
 
-    def build_command
-      if Jammer::Git.inside_work_tree?
-        git_command
+    def select_search_tool
+      if GitGrepTool.available?
+        GitGrepTool.new(@keywords)
       else
-        grep_command
+        GrepTool.new(@keywords)
       end
-    end
-
-    def git_command
-      cmd = ['git', 'grep', '-nI', '-w', '--cached']
-      @keywords.each { |kw| cmd << '-e' << kw }
-      cmd
-    end
-
-    def grep_command
-      cmd = ['grep', '-RIn', '-w']
-      @keywords.each { |kw| cmd << '-e' << kw }
-      cmd << '.'
-      cmd
     end
 
     def filter_excluded_patterns(results)
