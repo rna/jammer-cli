@@ -1,84 +1,38 @@
 # frozen_string_literal: true
 
-require 'optparse'
 require_relative '../jammer'
+require_relative 'command_parser'
+require_relative 'output_formatter'
 
 module Jammer
   class CommandLineInterface
     def initialize(args = ARGV, config: nil)
       @args = args
-      @options = {}
       @config = config || Jammer::Config.new
       @scanner = Jammer::Scanner.new(@config.keywords, @config.exclude)
     end
 
     def run
-      parse_options
-      execute_command
+      options = CommandParser.new(@args).parse
+      execute_command(options)
+    rescue Jammer::ConfigError => e
+      warn OutputFormatter.error(e.message)
+      exit 1
     rescue Jammer::Error => e
-      warn "An error occurred: #{e.message}" # Using warn prints to STDERR
+      warn OutputFormatter.error(e.message)
       exit 2
     end
 
     private
 
-    def parse_options
-      parser = OptionParser.new do |opts|
-        opts.banner = 'Usage: jammer [options]'
-
-        opts.separator ''
-        opts.separator 'Keyword checking options:'
-
-        opts.on('-a', '--keyword KEYWORD', 'Assigns a new search keyword') do |keyword|
-          @scanner.keyword = keyword
-        end
-
-        opts.on('-l', '--list', 'List all occurrences of the keyword') do
-          @options[:action] = :list
-        end
-
-        opts.on('-c', '--count', 'Count all occurrences of the keyword') do
-          @options[:action] = :count
-        end
-
-        opts.separator ''
-        opts.separator 'Setup options:'
-
-        opts.on('--init', 'Initialize jammer in current project (creates config + git hook)') do
-          @options[:action] = :init
-        end
-
-        opts.on('--uninstall', 'Remove jammer from current project (removes config + git hook)') do
-          @options[:action] = :uninstall
-        end
-
-        opts.separator ''
-        opts.separator 'Other options:'
-
-        opts.on('-f', '--force', 'Force overwrite of existing config and hooks') do
-          @options[:force] = true
-        end
-
-        opts.on('-h', '--help', 'Show this message') do
-          puts opts
-          exit 0
-        end
-
-        opts.on('-v', '--version', 'Show version') do
-          puts "Jammer version #{Jammer::VERSION}"
-          exit 0
-        end
-      end
-
-      parser.parse!(@args)
-    rescue OptionParser::InvalidOption => e
-      puts "Error: #{e.message}"
-      puts parser
-      exit 1
-    end
-
-    def execute_command
-      case @options[:action]
+    def execute_command(options)
+      case options[:action]
+      when :help
+        puts OutputFormatter.help(CommandParser.new.parser)
+        exit 0
+      when :version
+        puts OutputFormatter.version
+        exit 0
       when :list
         puts @scanner.occurrence_list
         exit 0
@@ -86,56 +40,24 @@ module Jammer
         puts @scanner.occurrence_count
         exit 0
       when :init
-        handle_init
+        handle_init(options)
       when :uninstall
         handle_uninstall
       else
-        check_keywords_and_commands
+        handle_keyword_check(options)
       end
     end
 
-    def handle_init
-      status = Jammer::HookManager.init_config(@options)
+    def handle_keyword_check(options)
+      # Apply custom keyword if provided
+      @scanner.keyword = options[:keyword] if options[:keyword]
 
-      if status[:config_created]
-        puts "✓ Created .jammer.yml"
-      else
-        puts "ℹ .jammer.yml already exists"
-      end
-
-      if status[:hook_created]
-        puts "✓ Successfully installed pre-commit hook"
-      elsif !Jammer::Git.inside_work_tree?
-        puts ""
-        puts "Note: Not in a Git repository. Run 'jammer --init' from a Git repository to install the hook."
-      else
-        puts "ℹ Git pre-commit hook already exists"
-      end
-
-      exit 0
-    rescue Jammer::HookError => e
-      warn "Error: #{e.message}"
-      exit 1
-    end
-
-    def handle_uninstall
-      Jammer::HookManager.uninstall_config
-      puts "✓ Removed .jammer.yml"
-      puts "✓ Removed Git pre-commit hook"
-      puts "Jammer has been uninstalled from this project."
-      exit 0
-    rescue Jammer::HookError => e
-      warn "Error: #{e.message}"
-      exit 1
-    end
-
-    def check_keywords_and_commands
       if @scanner.exists?
-        keywords_str = @scanner.keywords.join(", ")
-        puts "Found keywords: #{keywords_str}. Aborting commit."
+        puts OutputFormatter.keywords_found(@scanner.keywords)
         exit 1
       end
 
+      # Run configured commands if any
       commands = @config.commands
       if commands.any?
         executor = Jammer::CommandExecutor.new(commands)
@@ -148,6 +70,37 @@ module Jammer
       end
 
       exit 0
+    end
+
+    def handle_init(options)
+      status = Jammer::HookManager.init_config(options)
+
+      puts OutputFormatter.config_created if status[:config_created]
+      puts OutputFormatter.config_already_exists unless status[:config_created]
+
+      if status[:hook_created]
+        puts OutputFormatter.hook_created
+      elsif !Jammer::Git.inside_work_tree?
+        puts OutputFormatter.not_in_git_repo
+      else
+        puts OutputFormatter.hook_already_exists
+      end
+
+      exit 0
+    rescue Jammer::HookError => e
+      warn "Error: #{e.message}"
+      exit 1
+    end
+
+    def handle_uninstall
+      Jammer::HookManager.uninstall_config
+      puts OutputFormatter.config_removed
+      puts OutputFormatter.hook_removed
+      puts OutputFormatter.uninstall_complete
+      exit 0
+    rescue Jammer::HookError => e
+      warn "Error: #{e.message}"
+      exit 1
     end
   end
 end

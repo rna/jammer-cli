@@ -6,6 +6,8 @@ require_relative 'jammer/git'
 require_relative 'jammer/hook_manager'
 require_relative 'jammer/scanner'
 require_relative 'jammer/command_executor'
+require_relative 'jammer/command_parser'
+require_relative 'jammer/output_formatter'
 require_relative 'jammer/command_line_interface'
 
 module Jammer
