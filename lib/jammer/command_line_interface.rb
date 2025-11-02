@@ -90,7 +90,7 @@ module Jammer
       when :uninstall
         handle_uninstall
       else
-        check_keywords
+        check_keywords_and_commands
       end
     end
 
@@ -129,14 +129,25 @@ module Jammer
       exit 1
     end
 
-    def check_keywords
+    def check_keywords_and_commands
       if @scanner.exists?
         keywords_str = @scanner.keywords.join(", ")
         puts "Found keywords: #{keywords_str}. Aborting commit."
         exit 1
-      else
-        exit 0
       end
+
+      commands = @config.commands
+      if commands.any?
+        executor = Jammer::CommandExecutor.new(commands)
+        executor.run_all
+
+        unless executor.all_passed?
+          puts executor.report
+          exit 1
+        end
+      end
+
+      exit 0
     end
   end
 end

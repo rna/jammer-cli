@@ -20,6 +20,10 @@ module Jammer
       @config.fetch('exclude', [])
     end
 
+    def commands
+      @config.fetch('commands', [])
+    end
+
     private
 
     def load_config(file_path)
