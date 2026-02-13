@@ -16,7 +16,7 @@ Gem::Specification.new do |spec|
 
   spec.files = Dir.chdir(__dir__) do
     runtime_files = Dir.glob("{bin,hooks,lib}/**/*").select { |path| File.file?(path) }
-    docs_files = %w[README.md LICENSE .jammer.yml.example]
+    docs_files = %w[README.md CHANGELOG.md CONTRIBUTING.md LICENSE .jammer.yml.example]
     (runtime_files + docs_files).sort
   end
 

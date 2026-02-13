@@ -1,5 +1,7 @@
 # jammer-cli
 
+[![Tests & Linting](https://github.com/rna/jammer-cli/actions/workflows/tests.yml/badge.svg)](https://github.com/rna/jammer-cli/actions/workflows/tests.yml)
+
 ## GOAL of this project:
 It is a lightweight CLI + Git pre-commit hook that prevents committing files with forbidden keywords (like TODO, FIXME, DEBUG).
 It helps keep repositories clean by enforcing code hygiene automatically.
@@ -103,3 +105,11 @@ gem uninstall jammer-cli
 ```
 
 Note: This does NOT remove the configuration and hooks from all individual repositories. Use `jammer --uninstall` in each project to clean up.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup, testing, and pull request guidelines.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release history.
