@@ -70,9 +70,21 @@ describe Jammer::PathResolver do
   end
 
   context "error handling" do
-    it "raises error if gem spec not found" do
+    it "falls back to source root if gem spec not found" do
       allow(Gem.loaded_specs).to receive(:[]).and_return(nil)
-      expect { Jammer::PathResolver.hook_template_path }.to raise_error(Jammer::HookError)
+
+      hook_path = Jammer::PathResolver.hook_template_path
+      config_path = Jammer::PathResolver.config_example_path
+
+      expect(File.exist?(hook_path)).to be true
+      expect(File.exist?(config_path)).to be true
+    end
+
+    it "raises error if gem spec not found and source markers are missing" do
+      allow(Gem.loaded_specs).to receive(:[]).and_return(nil)
+      allow(Jammer::PathResolver).to receive(:root_markers_present?).and_return(false)
+
+      expect { Jammer::PathResolver.hook_template_path }.to raise_error(Jammer::HookError, /root path/)
     end
   end
 end

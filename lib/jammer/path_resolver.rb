@@ -3,6 +3,11 @@
 # Resolves paths to gem resources
 module Jammer
   class PathResolver
+    ROOT_MARKERS = [
+      [".jammer.yml.example"],
+      ["hooks", "pre-commit"]
+    ].freeze
+
     def self.hook_template_path
       File.join(gem_root, "hooks", "pre-commit")
     end
@@ -28,9 +33,17 @@ module Jammer
 
     def self.gem_root
       gem_spec = Gem.loaded_specs["jammer-cli"]
-      raise HookError, "jammer-cli gem specification not found" unless gem_spec
+      return gem_spec.full_gem_path if gem_spec
 
-      gem_spec.full_gem_path
+      source_root = File.expand_path("../..", __dir__)
+      return source_root if root_markers_present?(source_root)
+
+      raise HookError, "Could not resolve jammer-cli root path"
     end
+
+    def self.root_markers_present?(root)
+      ROOT_MARKERS.all? { |parts| File.exist?(File.join(root, *parts)) }
+    end
+    private_class_method :root_markers_present?
   end
 end
