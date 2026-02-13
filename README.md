@@ -72,6 +72,15 @@ The `.jammer.yml` file follows the GitHub/ESLint config pattern. See [`.jammer.y
 
 **`exclude`** - List of path patterns to skip during scanning
 
+**`commands`** - List of commands to run after keyword checks pass.  
+Commands are executed directly (no implicit shell). For shell operators, wrap explicitly:
+
+```yaml
+commands:
+  - rubocop
+  - sh -c "bundle exec rspec --fail-fast && echo done"
+```
+
 ## Usage
 
 ### Check for Keywords Manually
