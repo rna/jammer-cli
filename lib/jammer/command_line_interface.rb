@@ -33,11 +33,12 @@ module Jammer
 
     def initialize(args = ARGV, config: nil)
       @args = args
-      @config = config || Jammer::Config.new
-      @scanner = Jammer::Scanner.new(@config.keywords, @config.exclude)
+      @config = config
+      @scanner = nil
     end
 
     def run
+      initialize_runtime
       options = CommandParser.new(@args).parse
       execute_command(options)
     rescue Jammer::ConfigError => e
@@ -49,6 +50,11 @@ module Jammer
     end
 
     private
+
+    def initialize_runtime
+      @config ||= Jammer::Config.new
+      @scanner ||= Jammer::Scanner.new(@config.keywords, @config.exclude)
+    end
 
     def execute_command(options)
       handler = action_handler(options[:action])

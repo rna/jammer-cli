@@ -76,4 +76,53 @@ describe Jammer::Config do
       end
     end
   end
+
+  context "config validation" do
+    it "raises ConfigError when keywords is not an array" do
+      create_test_directory do |test_dir|
+        create_file(".jammer.yml", "keywords: TODO")
+        expect { Jammer::Config.new(test_dir) }.to raise_error(Jammer::ConfigError, /keywords/)
+      end
+    end
+
+    it "raises ConfigError when exclude is not an array" do
+      create_test_directory do |test_dir|
+        create_file(".jammer.yml", "exclude: vendor/")
+        expect { Jammer::Config.new(test_dir) }.to raise_error(Jammer::ConfigError, /exclude/)
+      end
+    end
+
+    it "raises ConfigError when commands is not an array" do
+      create_test_directory do |test_dir|
+        create_file(".jammer.yml", "commands: echo test")
+        expect { Jammer::Config.new(test_dir) }.to raise_error(Jammer::ConfigError, /commands/)
+      end
+    end
+
+    it "raises ConfigError when arrays include non-string values" do
+      create_test_directory do |test_dir|
+        config_content = <<~YAML
+          keywords:
+            - TODO
+            - 123
+        YAML
+        create_file(".jammer.yml", config_content)
+        expect { Jammer::Config.new(test_dir) }.to raise_error(Jammer::ConfigError, /non-empty strings/)
+      end
+    end
+
+    it "raises ConfigError for unknown keys" do
+      create_test_directory do |test_dir|
+        create_file(".jammer.yml", "unknown_key: true")
+        expect { Jammer::Config.new(test_dir) }.to raise_error(Jammer::ConfigError, /Unknown setting/)
+      end
+    end
+
+    it "raises ConfigError for invalid YAML syntax" do
+      create_test_directory do |test_dir|
+        create_file(".jammer.yml", "keywords: [TODO")
+        expect { Jammer::Config.new(test_dir) }.to raise_error(Jammer::ConfigError, /Invalid syntax/)
+      end
+    end
+  end
 end
