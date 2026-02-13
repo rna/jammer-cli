@@ -5,7 +5,32 @@ require_relative "command_parser"
 require_relative "output_formatter"
 
 module Jammer
+  # rubocop:disable Metrics/ClassLength
   class CommandLineInterface
+    @action_handlers = {}
+    @default_action_handler = nil
+
+    def self.register_action(name, method_name:, takes_options: false)
+      @action_handlers[name] = { method_name: method_name, takes_options: takes_options }
+    end
+
+    def self.register_default_action(method_name:, takes_options: false)
+      @default_action_handler = { method_name: method_name, takes_options: takes_options }
+    end
+
+    def self.handler_for_action(action)
+      @action_handlers[action] || @default_action_handler
+    end
+
+    # Register action handlers
+    register_action :help, method_name: :handle_help, takes_options: false
+    register_action :version, method_name: :handle_version, takes_options: false
+    register_action :list, method_name: :handle_list, takes_options: false
+    register_action :count, method_name: :handle_count, takes_options: false
+    register_action :init, method_name: :handle_init, takes_options: true
+    register_action :uninstall, method_name: :handle_uninstall, takes_options: false
+    register_default_action method_name: :handle_keyword_check, takes_options: true
+
     def initialize(args = ARGV, config: nil)
       @args = args
       @config = config || Jammer::Config.new
@@ -26,66 +51,74 @@ module Jammer
     private
 
     def execute_command(options)
-      case options[:action]
-      when :help
-        puts OutputFormatter.help(CommandParser.new.parser)
-        exit 0
-      when :version
-        puts OutputFormatter.version
-        exit 0
-      when :list
-        puts @scanner.occurrence_list
-        exit 0
-      when :count
-        puts @scanner.occurrence_count
-        exit 0
-      when :init
-        handle_init(options)
-      when :uninstall
-        handle_uninstall
+      handler = action_handler(options[:action])
+      handler.call(options)
+    end
+
+    def action_handler(action)
+      handler_config = self.class.handler_for_action(action)
+      method_name = handler_config[:method_name]
+      takes_options = handler_config[:takes_options]
+
+      if takes_options
+        ->(o) { send(method_name, o) }
       else
-        handle_keyword_check(options)
+        ->(_) { send(method_name) }
       end
     end
 
+    def handle_help
+      exit_with OutputFormatter.help(CommandParser.new.parser)
+    end
+
+    def handle_version
+      exit_with OutputFormatter.version
+    end
+
+    def handle_list
+      exit_with @scanner.occurrence_list
+    end
+
+    def handle_count
+      exit_with @scanner.occurrence_count
+    end
+
+    def exit_with(output, code = 0)
+      puts output
+      exit code
+    end
+
     def handle_keyword_check(options)
-      # Apply custom keyword if provided
       @scanner.keyword = options[:keyword] if options[:keyword]
+      return exit 1 if keyword_found?
 
-      if @scanner.exists?
-        puts OutputFormatter.keywords_found(@scanner.keywords)
-        exit 1
-      end
-
-      # Run configured commands if any
-      commands = @config.commands
-      if commands.any?
-        executor = Jammer::CommandExecutor.new(commands)
-        executor.run_all
-
-        unless executor.all_passed?
-          puts executor.report
-          exit 1
-        end
-      end
-
+      run_commands_if_configured
       exit 0
+    end
+
+    def keyword_found?
+      return false unless @scanner.exists?
+
+      puts OutputFormatter.keywords_found(@scanner.keywords)
+      true
+    end
+
+    def run_commands_if_configured
+      commands = @config.commands
+      return unless commands.any?
+
+      executor = Jammer::CommandExecutor.new(commands)
+      executor.run_all
+
+      return if executor.all_passed?
+
+      puts executor.report
+      exit 1
     end
 
     def handle_init(options)
       status = Jammer::HookManager.init_config(options)
-
-      puts OutputFormatter.config_created if status[:config_created]
-      puts OutputFormatter.config_already_exists unless status[:config_created]
-
-      if status[:hook_created]
-        puts OutputFormatter.hook_created
-      elsif !Jammer::Git.inside_work_tree?
-        puts OutputFormatter.not_in_git_repo
-      else
-        puts OutputFormatter.hook_already_exists
-      end
-
+      puts OutputFormatter.init_status(status, in_git_repo: Jammer::Git.inside_work_tree?)
       exit 0
     rescue Jammer::HookError => e
       warn "Error: #{e.message}"
@@ -103,4 +136,5 @@ module Jammer
       exit 1
     end
   end
+  # rubocop:enable Metrics/ClassLength
 end

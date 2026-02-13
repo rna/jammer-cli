@@ -53,5 +53,23 @@ module Jammer
     def self.error(message)
       "An error occurred: #{message}"
     end
+
+    def self.init_status(status, in_git_repo: true)
+      output = String.new
+      output << config_created if status[:config_created]
+      output << config_already_exists unless status[:config_created]
+      output << hook_status(status, in_git_repo: in_git_repo)
+      output
+    end
+
+    def self.hook_status(status, in_git_repo: true)
+      if status[:hook_created]
+        hook_created
+      elsif !in_git_repo
+        not_in_git_repo
+      else
+        hook_already_exists
+      end
+    end
   end
 end

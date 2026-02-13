@@ -12,17 +12,17 @@ module Jammer
       @config = load_config(find_config_file(path))
     end
 
-    def keywords
-      @config.fetch("keywords", [DEFAULT_KEYWORD])
+    def self.define_config_accessor(name, default: nil)
+      define_method(name) do
+        @config.fetch(name.to_s, default)
+      end
     end
+    private_class_method :define_config_accessor
 
-    def exclude
-      @config.fetch("exclude", [])
-    end
-
-    def commands
-      @config.fetch("commands", [])
-    end
+    # Dynamically define config accessors
+    define_config_accessor :keywords, default: [DEFAULT_KEYWORD]
+    define_config_accessor :exclude, default: []
+    define_config_accessor :commands, default: []
 
     private
 

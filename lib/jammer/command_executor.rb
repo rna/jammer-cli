@@ -27,21 +27,8 @@ module Jammer
     end
 
     def report
-      lines = []
       failed = failed_results
-
-      if failed.empty?
-        lines << "✓ All checks passed"
-      else
-        lines << "✗ Some checks failed:\n"
-        failed.each do |result|
-          lines << "\nCommand: #{result[:command]}"
-          lines << "Exit code: #{result[:exit_code]}"
-          lines << "Output:\n#{result[:output]}" if result[:output].strip.length.positive?
-        end
-      end
-
-      lines.join("\n")
+      failed.empty? ? success_report : failure_report(failed)
     end
 
     private
@@ -55,6 +42,20 @@ module Jammer
         exit_code: status.exitstatus,
         output: (stdout + stderr).force_encoding("UTF-8").gsub("\uFFFD", "")
       }
+    end
+
+    def success_report
+      "✓ All checks passed"
+    end
+
+    def failure_report(failed)
+      lines = ["✗ Some checks failed:\n"]
+      failed.each do |result|
+        lines << "\nCommand: #{result[:command]}"
+        lines << "Exit code: #{result[:exit_code]}"
+        lines << "Output:\n#{result[:output]}" if result[:output].strip.length.positive?
+      end
+      lines.join("\n")
     end
   end
 end

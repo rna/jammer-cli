@@ -12,24 +12,22 @@ module Jammer
 
     def self.init_config(options = {})
       status = { config_created: false, hook_created: false }
-
-      # Setup config file (independent of hook)
       status[:config_created] = ConfigManager.setup(options)
-
-      # Setup hook file if in git repo (independent of config status)
-      if Jammer::Git.inside_work_tree?
-        hook_path = PathResolver.hook_path
-        hook_exists = hook_path && File.exist?(hook_path)
-
-        # Only mark as created if hook didn't exist before
-        unless hook_exists && !options[:force] && hook_already_by_jammer?(hook_path)
-          install_hook(options)
-          status[:hook_created] = !hook_exists
-        end
-      end
-
+      status[:hook_created] = init_hook(options) if Jammer::Git.inside_work_tree?
       status
     end
+
+    # rubocop:disable Naming/PredicateMethod
+    def self.init_hook(options = {})
+      hook_path = PathResolver.hook_path
+      hook_exists = hook_path && File.exist?(hook_path)
+
+      return false if hook_exists && !options[:force] && hook_already_by_jammer?(hook_path)
+
+      install_hook(options)
+      !hook_exists
+    end
+    # rubocop:enable Naming/PredicateMethod
 
     def self.uninstall_config
       config_exists = ConfigManager.exists?
@@ -49,15 +47,15 @@ module Jammer
     end
 
     def self.remove_hook_file(hook_path)
-      hook_content = File.read(hook_path)
+      safe_operation("removing hook") do
+        hook_content = File.read(hook_path)
 
-      unless hook_content.include?(HOOK_SIGNATURE)
-        raise HookError, "Custom pre-commit hook found (not created by jammer). Skipping removal."
+        unless hook_content.include?(HOOK_SIGNATURE)
+          raise HookError, "Custom pre-commit hook found (not created by jammer). Skipping removal."
+        end
+
+        File.delete(hook_path)
       end
-
-      File.delete(hook_path)
-    rescue StandardError => e
-      raise HookError, "Error removing hook: #{e.message}"
     end
 
     def self.install_hook(options = {})
@@ -82,10 +80,17 @@ module Jammer
     end
 
     def self.write_hook_file(hook_path, content)
-      File.write(hook_path, content)
-      FileUtils.chmod("+x", hook_path)
-    rescue StandardError => e
-      raise HookError, "Error installing hook: #{e.message}"
+      safe_operation("installing hook") do
+        File.write(hook_path, content)
+        FileUtils.chmod("+x", hook_path)
+      end
     end
+
+    def self.safe_operation(operation_name)
+      yield
+    rescue StandardError => e
+      raise HookError, "Error #{operation_name}: #{e.message}"
+    end
+    private_class_method :safe_operation
   end
 end
