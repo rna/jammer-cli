@@ -156,6 +156,17 @@ describe Jammer::Scanner do
         expect(scanner.occurrence_count).to eq(1)
       end
     end
+
+    it "matches exclude patterns against file path only" do
+      create_test_git_repo do |_test_dir|
+        create_file("app.rb", "#TODO: update vendor/ docs")
+        `git add .`
+
+        scanner = Jammer::Scanner.new("#TODO", ["vendor/"])
+        expect(scanner.occurrence_count).to eq(1)
+        expect(scanner.occurrence_list).to include("app.rb")
+      end
+    end
   end
 
   context "multiple keywords" do

@@ -81,8 +81,13 @@ module Jammer
       return results if @exclude_patterns.empty?
 
       results.reject do |line|
-        @exclude_patterns.any? { |pattern| line.include?(pattern) }
+        path = extract_match_path(line)
+        @exclude_patterns.any? { |pattern| path.include?(pattern) }
       end
+    end
+
+    def extract_match_path(line)
+      line.split(":", 2).first
     end
   end
 end
