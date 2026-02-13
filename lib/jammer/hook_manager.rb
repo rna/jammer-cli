@@ -33,11 +33,21 @@ module Jammer
       config_exists = ConfigManager.exists?
       hook_path = PathResolver.hook_path
       hook_exists = hook_path && File.exist?(hook_path)
+      status = { config_removed: false, hook_removed: false }
 
       raise HookError, "Nothing to uninstall. No .jammer.yml or git hook found." unless config_exists || hook_exists
 
-      ConfigManager.remove if config_exists
-      remove_hook_file(hook_path) if hook_exists && hook_path
+      if config_exists
+        ConfigManager.remove
+        status[:config_removed] = true
+      end
+
+      if hook_exists && hook_path
+        remove_hook_file(hook_path)
+        status[:hook_removed] = true
+      end
+
+      status
     end
 
     def self.hook_already_by_jammer?(hook_path)

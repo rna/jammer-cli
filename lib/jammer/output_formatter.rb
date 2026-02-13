@@ -32,10 +32,7 @@ module Jammer
     end
 
     def self.not_in_git_repo
-      <<~MSG
-
-        Note: Not in a Git repository. Run 'jammer --init' from a Git repository to install the hook.
-      MSG
+      "Note: Not in a Git repository. Run 'jammer --init' from a Git repository to install the hook."
     end
 
     def self.config_removed
@@ -55,11 +52,10 @@ module Jammer
     end
 
     def self.init_status(status, in_git_repo: true)
-      output = String.new
-      output << config_created if status[:config_created]
-      output << config_already_exists unless status[:config_created]
-      output << hook_status(status, in_git_repo: in_git_repo)
-      output
+      lines = []
+      lines << (status[:config_created] ? config_created : config_already_exists)
+      lines << hook_status(status, in_git_repo: in_git_repo)
+      lines.join("\n")
     end
 
     def self.hook_status(status, in_git_repo: true)

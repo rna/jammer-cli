@@ -61,6 +61,22 @@ describe Jammer::OutputFormatter do
       output = Jammer::OutputFormatter.not_in_git_repo
       expect(output).to include("Git repository")
       expect(output).to include("jammer --init")
+      expect(output).to start_with("Note:")
+    end
+
+    it "formats init status with newline separated entries" do
+      output = Jammer::OutputFormatter.init_status({ config_created: true, hook_created: true }, in_git_repo: true)
+
+      expect(output).to include("Created .jammer.yml")
+      expect(output).to include("installed pre-commit hook")
+      expect(output).to include("\n")
+    end
+
+    it "formats init status for non-git repos" do
+      output = Jammer::OutputFormatter.init_status({ config_created: false, hook_created: false }, in_git_repo: false)
+
+      expect(output).to include("already exists")
+      expect(output).to include("Not in a Git repository")
     end
   end
 

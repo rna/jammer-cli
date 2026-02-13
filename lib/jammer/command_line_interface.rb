@@ -132,9 +132,9 @@ module Jammer
     end
 
     def handle_uninstall
-      Jammer::HookManager.uninstall_config
-      puts OutputFormatter.config_removed
-      puts OutputFormatter.hook_removed
+      status = Jammer::HookManager.uninstall_config
+      puts OutputFormatter.config_removed if status[:config_removed]
+      puts OutputFormatter.hook_removed if status[:hook_removed]
       puts OutputFormatter.uninstall_complete
       exit 0
     rescue Jammer::HookError => e
