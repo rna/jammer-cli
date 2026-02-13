@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "open3"
+require "shellwords"
 
 module Jammer
   class CommandExecutor
@@ -34,13 +35,40 @@ module Jammer
     private
 
     def run_command(command)
-      stdout, stderr, status = Open3.capture3(command)
+      argv = parse_command(command)
+      stdout, stderr, status = Open3.capture3(*argv)
 
       {
         command: command,
         success: status.success?,
         exit_code: status.exitstatus,
         output: (stdout + stderr).force_encoding("UTF-8").gsub("\uFFFD", "")
+      }
+    rescue ArgumentError => e
+      failed_result(command, "Invalid command syntax: #{e.message}")
+    rescue Errno::ENOENT => e
+      failed_result(command, "Command not found: #{e.message}")
+    rescue StandardError => e
+      failed_result(command, "Error executing command: #{e.message}")
+    end
+
+    def parse_command(command)
+      unless command.is_a?(String)
+        raise ArgumentError, "Command must be a string"
+      end
+
+      argv = Shellwords.split(command)
+      raise ArgumentError, "Command cannot be empty" if argv.empty?
+
+      argv
+    end
+
+    def failed_result(command, message)
+      {
+        command: command,
+        success: false,
+        exit_code: 127,
+        output: message
       }
     end
 

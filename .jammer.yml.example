@@ -23,6 +23,8 @@ exclude:
 
 # Commands to run as pre-commit checks
 # All commands must pass (exit code 0) for commit to succeed
+# Note: commands run without an implicit shell. For shell operators, wrap with:
+# - sh -c "command1 && command2"
 commands:
   # Example: Run rubocop linter
   # - rubocop

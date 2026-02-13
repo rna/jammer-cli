@@ -41,11 +41,11 @@ describe Jammer::CommandExecutor do
     end
 
     it "includes command and exit code in report" do
-      executor = Jammer::CommandExecutor.new(["exit 42"])
+      executor = Jammer::CommandExecutor.new(['sh -c "exit 42"'])
       executor.run_all
 
       report = executor.report
-      expect(report).to include("exit 42")
+      expect(report).to include('sh -c "exit 42"')
       expect(report).to include("Exit code: 42")
     end
   end
@@ -59,7 +59,7 @@ describe Jammer::CommandExecutor do
     end
 
     it "includes output in report for failed commands" do
-      executor = Jammer::CommandExecutor.new(['echo "error message" && false'])
+      executor = Jammer::CommandExecutor.new(['sh -c "echo error message && false"'])
       executor.run_all
 
       expect(executor.report).to include("error message")
@@ -82,7 +82,7 @@ describe Jammer::CommandExecutor do
     it "runs all commands even if some fail" do
       executor = Jammer::CommandExecutor.new([
                                                'echo "pass"',
-                                               "exit 1",
+                                               'sh -c "exit 1"',
                                                'echo "also runs"'
                                              ])
       results = executor.run_all
@@ -90,6 +90,24 @@ describe Jammer::CommandExecutor do
       expect(results.length).to eq(3)
       failed = executor.failed_results
       expect(failed.length).to eq(1)
+    end
+  end
+
+  context "command parsing safety" do
+    it "does not execute shell expansion by default" do
+      executor = Jammer::CommandExecutor.new(['echo "$HOME"'])
+      results = executor.run_all
+
+      expect(results.first[:success]).to be true
+      expect(results.first[:output]).to include("$HOME")
+    end
+
+    it "captures invalid command syntax as a failed result" do
+      executor = Jammer::CommandExecutor.new(['echo "unterminated'])
+      results = executor.run_all
+
+      expect(results.first[:success]).to be false
+      expect(results.first[:output]).to include("Invalid command syntax")
     end
   end
 
