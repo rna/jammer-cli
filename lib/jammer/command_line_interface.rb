@@ -52,8 +52,14 @@ module Jammer
     private
 
     def initialize_runtime
-      @config ||= Jammer::Config.new
-      @scanner ||= Jammer::Scanner.new(@config.keywords, @config.exclude)
+      @config = resolved_config
+      return if @scanner
+
+      @scanner = Jammer::Scanner.new(@config.keywords, @config.exclude)
+    end
+
+    def resolved_config
+      @config || Jammer::Config.new
     end
 
     def execute_command(options)

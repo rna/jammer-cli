@@ -9,10 +9,11 @@ Gem::Specification.new do |spec|
   spec.email         = ["im@rna.me"]
 
   spec.summary       = "A CLI tool to block commits containing forbidden keywords."
-  spec.description   = "Checks staged files for keywords like TODO/FIXME before commit and aborts when matches are found."
+  spec.description   = "Checks staged files for keywords like TODO/FIXME " \
+                       "before commit and aborts when matches are found."
   spec.homepage      = "https://github.com/rna/jammer-cli"
   spec.license       = "MIT"
-  spec.required_ruby_version = Gem::Requirement.new(">= 3.0")
+  spec.required_ruby_version = Gem::Requirement.new(">= 3.1")
 
   spec.files = Dir.chdir(__dir__) do
     runtime_files = Dir.glob("{bin,hooks,lib}/**/*").select { |path| File.file?(path) }
@@ -23,8 +24,5 @@ Gem::Specification.new do |spec|
   spec.executables   = ["jammer"]
   spec.require_paths = ["lib"]
 
-  spec.add_development_dependency "rake", "~> 13.0"
-  spec.add_development_dependency "rspec", "~> 3.0"
-  spec.add_development_dependency "rubocop", "~> 1.0"
   spec.metadata["rubygems_mfa_required"] = "true"
 end

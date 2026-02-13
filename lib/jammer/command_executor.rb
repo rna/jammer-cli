@@ -36,14 +36,8 @@ module Jammer
 
     def run_command(command)
       argv = parse_command(command)
-      stdout, stderr, status = Open3.capture3(*argv)
-
-      {
-        command: command,
-        success: status.success?,
-        exit_code: status.exitstatus,
-        output: (stdout + stderr).force_encoding("UTF-8").gsub("\uFFFD", "")
-      }
+      stdout, stderr, status = execute_command(argv)
+      success_result(command, status, stdout, stderr)
     rescue ArgumentError => e
       failed_result(command, "Invalid command syntax: #{e.message}")
     rescue Errno::ENOENT => e
@@ -53,14 +47,29 @@ module Jammer
     end
 
     def parse_command(command)
-      unless command.is_a?(String)
-        raise ArgumentError, "Command must be a string"
-      end
+      raise ArgumentError, "Command must be a string" unless command.is_a?(String)
 
       argv = Shellwords.split(command)
       raise ArgumentError, "Command cannot be empty" if argv.empty?
 
       argv
+    end
+
+    def execute_command(argv)
+      Open3.capture3(*argv)
+    end
+
+    def success_result(command, status, stdout, stderr)
+      {
+        command: command,
+        success: status.success?,
+        exit_code: status.exitstatus,
+        output: sanitize_output(stdout, stderr)
+      }
+    end
+
+    def sanitize_output(stdout, stderr)
+      (stdout + stderr).force_encoding("UTF-8").gsub("\uFFFD", "")
     end
 
     def failed_result(command, message)

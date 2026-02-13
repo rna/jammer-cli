@@ -28,19 +28,27 @@ module Jammer
     private
 
     def load_config(file_path)
-      return {} unless file_path && File.exist?(file_path)
+      return {} unless config_file_exists?(file_path)
 
-      content = YAML.safe_load_file(file_path, permitted_classes: [], aliases: false)
-      return {} if content.nil?
-      raise Jammer::ConfigError, "#{CONFIG_FILENAME} must be a YAML object." unless content.is_a?(Hash)
-
-      normalized = content.transform_keys(&:to_s)
+      normalized = parse_config_content(file_path)
       validate_config!(normalized)
       normalized
     rescue Psych::SyntaxError => e
       raise Jammer::ConfigError, "Invalid syntax in #{CONFIG_FILENAME} at line #{e.line}: #{e.problem}"
     rescue Errno::EACCES
       raise Jammer::ConfigError, "Permission denied reading #{CONFIG_FILENAME}."
+    end
+
+    def config_file_exists?(file_path)
+      file_path && File.exist?(file_path)
+    end
+
+    def parse_config_content(file_path)
+      content = YAML.safe_load_file(file_path, permitted_classes: [], aliases: false)
+      return {} if content.nil?
+      raise Jammer::ConfigError, "#{CONFIG_FILENAME} must be a YAML object." unless content.is_a?(Hash)
+
+      content.transform_keys(&:to_s)
     end
 
     def validate_config!(content)
@@ -57,10 +65,7 @@ module Jammer
     end
 
     def validate_array_of_strings!(key, value)
-      unless value.is_a?(Array)
-        raise Jammer::ConfigError, "'#{key}' must be an array of strings in #{CONFIG_FILENAME}."
-      end
-
+      raise Jammer::ConfigError, "'#{key}' must be an array of strings in #{CONFIG_FILENAME}." unless value.is_a?(Array)
       return if value.all? { |entry| entry.is_a?(String) && !entry.strip.empty? }
 
       raise Jammer::ConfigError, "'#{key}' must contain only non-empty strings in #{CONFIG_FILENAME}."

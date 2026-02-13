@@ -37,17 +37,24 @@ module Jammer
 
       raise HookError, "Nothing to uninstall. No .jammer.yml or git hook found." unless config_exists || hook_exists
 
-      if config_exists
-        ConfigManager.remove
-        status[:config_removed] = true
-      end
-
-      if hook_exists && hook_path
-        remove_hook_file(hook_path)
-        status[:hook_removed] = true
-      end
+      remove_config_if_needed(config_exists, status)
+      remove_hook_if_needed(hook_exists, hook_path, status)
 
       status
+    end
+
+    def self.remove_config_if_needed(config_exists, status)
+      return unless config_exists
+
+      ConfigManager.remove
+      status[:config_removed] = true
+    end
+
+    def self.remove_hook_if_needed(hook_exists, hook_path, status)
+      return unless hook_exists && hook_path
+
+      remove_hook_file(hook_path)
+      status[:hook_removed] = true
     end
 
     def self.hook_already_by_jammer?(hook_path)
