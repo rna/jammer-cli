@@ -5,14 +5,20 @@ It is a lightweight CLI + Git pre-commit hook that prevents committing files wit
 It helps keep repositories clean by enforcing code hygiene automatically.
 
 ## Features
-- [x] Regex-based scanning for keywords (default: #TODO).
+- [x] Keyword scanning for staged files (default: `#TODO`).
 - [x] CLI options: custom keyword, list matches, count matches.
 - [x] One-command setup and cleanup: `jammer --init` and `jammer --uninstall`
-- [x] Local installation via RubyGem.
+- [x] Installable as a Ruby gem.
 - [x] Config file support (.jammer.yml) with multiple keywords and exclude patterns.
 - [x] GitHub/ESLint-style configuration format.
 
 ## Installation
+
+### Install from RubyGems
+
+```bash
+gem install jammer-cli
+```
 
 ### Local Installation (for Development/Testing)
 

@@ -8,17 +8,19 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Ramesh Naidu Allu"]
   spec.email         = ["im@rna.me"]
 
-  spec.summary       = "A CLI tool to prevent Git commits/pushes with specific keywords."
-  spec.description   = "Checks staged files for keywords like TODO/FIXME before commit/push and aborts if found."
+  spec.summary       = "A CLI tool to block commits containing forbidden keywords."
+  spec.description   = "Checks staged files for keywords like TODO/FIXME before commit and aborts when matches are found."
   spec.homepage      = "https://github.com/rna/jammer-cli"
   spec.license       = "MIT"
   spec.required_ruby_version = Gem::Requirement.new(">= 3.0")
 
-  spec.files = `git ls-files -z`.split("\x0").reject do |f|
-    f.match(%r{^(test|spec|features)/})
+  spec.files = Dir.chdir(__dir__) do
+    runtime_files = Dir.glob("{bin,hooks,lib}/**/*").select { |path| File.file?(path) }
+    docs_files = %w[README.md LICENSE .jammer.yml.example]
+    (runtime_files + docs_files).sort
   end
 
-  spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
+  spec.executables   = ["jammer"]
   spec.require_paths = ["lib"]
 
   spec.add_development_dependency "rake", "~> 13.0"
